@@ -1,0 +1,32 @@
+---
+licenses:
+  - name: NVIDIAGRID
+    type: webtable
+    license_server: ucolic01.ctx.uco.es
+    feature_prefix_url: "http://ucolic01.ctx.uco.es:8080/licserver/manageFeatureUsage_view.action;jsessionid=FAC0E15E15CEFDC8C40971B198ED33B0?page=1"
+    feature_suffix_url: ""
+    feature_max_url_param: null
+    features_to_include: Quadro-Virtual-DWS,GRID-Virtual-Apps
+    feature_table_index: 9
+    feature_label_name: "Feature"
+    feature_label_total: "Count"
+    feature_label_in_use: "Available"
+    used_as_free: True
+    monitor_users: True
+    users_prefix_url: "http://ucolic01.ctx.uco.es:8080/licserver/manageFeatureUsage_featureDetails.action?feature.featureId="
+    users_suffix_url: "&page1"
+    users_index_url: 1,2
+    users_table_index: 3
+    users_table_skip_header: 0
+    users_search_feature: False
+    users_index_feature: True
+    users_label_feature_name: null
+    users_label_username: 0
+    users_label_hostname: 3
+    users_label_date: 5
+config:
+  port: 8000
+  sleep: 15
+  lsmon_cmd: .\lsmon
+  lmutil_cmd: .\lmutil lmstat -a -c
+  rlmutil_cmd: .\rlmutil rlmstat -a -c
