@@ -1,32 +1,17 @@
----
 licenses:
-  - name: DIFFRAC
-    type: webtable
+  - name: HYDRUS
+    type: web
     license_server: ucolic03.ctx.uco.es
-    feature_prefix_url: "http://ucolic03.ctx.uco.es:22350/Server.html"
-    feature_suffix_url: ""
-    feature_max_url_param: null
-    features_to_include: DIFFRAC.EVA V3.x,DIFFRAC.TOPAS V4.2,DIFFRAC.LEPTOS R V1,DIFFRAC.NANOFIT V1.2
-    feature_table_index: 1
-    feature_label_name: "Nombre"
-    feature_label_total: "Licencias"
-    feature_label_in_use: "Estado.3"
+    prefix_url: "http://ucolic03.ctx.uco.es:1947/_int_/features.html"
+    suffix_url: ""
+    max_url_param: 0
     used_as_free: False
-    monitor_users: True
-    users_prefix_url: "http://ucolic03.ctx.uco.es:22350/ServerUser.html"
-    users_suffix_url: null
-    users_index_url: 1
-    users_table_index: 1
-    users_table_skip_header: null
-    users_search_feature: True
-    users_index_feature: False
-    users_label_feature_name: "Product Item"
-    users_label_hostname: "Cliente"
-    users_label_username: null
-    users_label_date: null
+    match_exist: (?:<h2>Current usage of )(?P<featureName>.+?)(?:<\/h2>)
+    match_total: "(?:<h4>Total resources: )(?P<featureCount>.+?)(?:<\/h4><\/div>)"
+    match_used: "(?:<h4>Resources available: )(?P<featureCount>.+?)(?:<\/h4><\/div>)"
 config:
   port: 8000
-  sleep: 15
-  lsmon_cmd: .\lsmon
-  lmutil_cmd: .\lmutil lmstat -a -c
-  rlmutil_cmd: .\rlmutil rlmstat -a -c
+  sleep: 60
+  lsmon_cmd: ./lsmon
+  lmutil_cmd: ./lmutil lmstat -a -c
+  rlmutil_cmd: ./rlmutil rlmstat -a -c

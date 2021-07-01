@@ -3,13 +3,11 @@ licenses_exporter: A prometheus client to export lsmon & lmutil licenses
 Tonin 2018. University of Cordoba
 """
 
-#Develop or Production
-DEV = False
-
 import subprocess
-if not DEV: from prometheus_client import Gauge, start_http_server
+from prometheus_client import Gauge, start_http_server
 import time
 import sys
+import os
 import re
 import ruamel.yaml as yaml
 import requests
@@ -23,6 +21,10 @@ TRACE = False
 VERBOSE = True
 
 if DEBUG: VERBOSE = True
+
+def isWindows():
+    ret = True if os.name == 'nt' else False
+    return ret
 
 def isNan(num):
     return num != num
@@ -167,75 +169,79 @@ class App(object):
         if TRACE: trace(self.name," Entrando en parseweb")
         self.featureList = []
         self.online = False
-        try:
+ #       try:
             #Bucle para iterar segun el parametro
             #Si el parametro es 0 no hay sufijo
-            if self.max_url_param == 0:
-                self.max_url_param = 2
-                NoSuffix = True
+        if self.max_url_param == 0:
+            self.max_url_param = 2
+            NoSuffix = True
+        else:
+            NoSuffix = False
+
+        for i in range(1,self.max_url_param):
+            if TRACE: trace(self.name," En bucle parseweb")
+            #Componemos la url
+            if not NoSuffix:
+                url = self.prefix_url + str(i) + self.suffix_url
             else:
-                NoSuffix = False
+                url = self.prefix_url
+                    
+            if DEBUG: print("URL: ",self.name," ",url)
+            #Realizamos el request
+            Response = requests.get(url)
+            if TRACE: print("TRACE: ",self.name," parseweb despues de request")
+            content = Response.content
+            print(content)
+        
+            if WRITEHTML:
+                name = str(i) + ".web"
+                file = open(name,"wb")
+                file.write(content)
+                file.close()
+                print("DEBUGURL: ",self.name," ",url)
+                print("DEBUGREGEX: ",self.match_exist)
 
-            for i in range(1,self.max_url_param):
-                if TRACE: trace(self.name," En bucle parseweb")
-                #Componemos la url
-                if not NoSuffix:
-                    url = self.prefix_url + str(i) + self.suffix_url
+            #Vemos si existe algo para este parametro
+            match = re.findall(self.match_exist, str(content), re.MULTILINE)
+            if DEBUG: print("PARSEWEBMATCH: ",self.name," ",match)
+            if match:
+                if TRACE: trace(self.name,"En if match parseweb")
+                feature = Feature(match[0],self.name)
+                self.online = True
+                self.featureList.append(feature)
+                #Existe luego leemos el numero total de licencias y las que estan en uso
+                if TRACE: trace("PARSEWEBMATCH1: ",self.name)
+                total = re.findall(self.match_total, str(content), re.MULTILINE)
+                if TRACE: trace("PARSEWEBMATCH2: ",self.name)
+                inUse = re.findall(self.match_used, str(content), re.MULTILINE)
+                if TRACE: trace("PARSEWEBMATCH3: ",self.name)
+                feature.maxLicenses = float(total[0])
+                if TRACE: trace("PARSEWEBMATCH4: ",self.name)
+                feature.inUse = float(inUse[0])
+                if self.used_as_free:
+                    feature.inUse = feature.maxLicenses - feature.inUse
+                    if DEBUG:            
+                        print("Total ",feature.name,": ",feature.maxLicenses)
+                        print("Inuse ",feature.name,": ",feature.inUse)
                 else:
-                    url = self.prefix_url
-                        
-                if DEBUG: print("URL: ",self.name," ",url)
-                #Realizamos el request
-                Response = requests.get(url)
-                if TRACE: print("TRACE: ",self.name," parseweb despues de request")
-                content = Response.content
-            
-                if WRITEHTML:
-                    name = str(i) + ".web"
-                    file = open(name,"w")
-                    file.write(content)
-                    file.close()
-                    print("DEBUGURL: ",self.name," ",url)
-                    print("DEBUGREGEX: ",self.match_exist)
-
-                #Vemos si existe algo para este parametro
-                match = re.findall(self.match_exist, str(content), re.MULTILINE)
-                if DEBUG: print("PARSEWEBMATCH: ",self.name," ",match)
-                if match:
-                    if TRACE: trace(self.name,"En if match parseweb")
-                    feature = Feature(match[0],self.name)
-                    self.online = True
-                    self.featureList.append(feature)
-                    #Existe luego leemos el numero total de licencias y las que estan en uso
-                    if TRACE: trace("PARSEWEBMATCH1: ",self.name)
-                    total = re.findall(self.match_total, str(content), re.MULTILINE)
-                    if TRACE: trace("PARSEWEBMATCH2: ",self.name)
-                    inUse = re.findall(self.match_used, str(content), re.MULTILINE)
-                    if TRACE: trace("PARSEWEBMATCH3: ",self.name)
-                    feature.maxLicenses = float(total[0])
-                    if TRACE: trace("PARSEWEBMATCH4: ",self.name)
-                    feature.inUse = float(inUse[0])
-                    if self.used_as_free:
-                        feature.inUse = feature.maxLicenses - feature.inUse
-                        if DEBUG:            
-                            print("Total ",feature.name,": ",feature.maxLicenses)
-                            print("Inuse ",feature.name,": ",feature.inUse)
-                    else:
-                        if DEBUG: print("DEBUG: ",self.name," ",i,"nomatch. Pattern ",self.match_exist)
-        except  Exception as e:
-            if VERBOSE: print("EXC_PARSEWEB: ",self.name," ",e)
+                    if DEBUG: print("DEBUG: ",self.name," ",i,"nomatch. Pattern ",self.match_exist)
+#        except  Exception as e:
+#            if VERBOSE: print("EXC_PARSEWEB: ",self.name," ",e)
 
     def parseLsmon(self):
         self.featureList = []
         self.online = False
-        output = subprocess.getstatusoutput(self.parent.LSMONCMD + ' ' + self.license_server)
+        #output = subprocess.getstatusoutput(self.parent.LSMONCMD + ' ' + self.license_server)
+        p = subprocess.Popen([self.parent.LSMONCMD,self.license_server],stdin=subprocess.PIPE,stdout=subprocess.PIPE,text=True)
+        output = p.stdout
+        p.stdin.close()
         for _output in output:
             if type(_output) == type(''):
                 lines = _output.split('\n')
                 for line in lines:
                     if 'Feature name' in line:
                         aux = line.split(":",1)[1][1:-3].replace('"','')
-                        if aux in self.features_to_include.split(","):
+                        if aux in self.features_to_include or self.features_to_include[0] == "ALL":
                             feature = Feature(aux, self.name)
                             self.online = True
                             self.featureList.append(feature)
@@ -263,7 +269,7 @@ class App(object):
                     if 'Users of' in line:
                         r = re.search('Users of (.*):  \(Total of (.*)licenses? issued;  Total of (.*) licenses? in use\)',line)
                         if r is not None:
-                        	if r.group(1) in self.features_to_include.split(","):
+                        	if r.group(1) in self.features_to_include or self.features_to_include[0] == "ALL":
                             		feature = Feature(r.group(1), self.name)
                             		self.online = True
                             		feature.maxLicenses = float(r.group(2))
@@ -320,19 +326,16 @@ class App(object):
 
     def updateMetric(self):
         self.parse()
-        if not DEV:
-            self.parent.license_server_status.labels(app=self.name,fqdn=self.license_server,
-                                                    master='true',port='port',
-                                                    version='version').set(self.online)
+        self.parent.license_server_status.labels(app=self.name,fqdn=self.license_server,
+                                                master='true',port='port',
+                                                version='version').set(self.online)
         for feature in self.featureList:
-            if not DEV:
-                self.parent.license_feature_issued.labels(app=feature.app,name=feature.name).set(feature.maxLicenses)
-                self.parent.license_feature_used.labels(app=feature.app,name=feature.name).set(feature.inUse)
+            self.parent.license_feature_issued.labels(app=feature.app,name=feature.name).set(feature.maxLicenses)
+            self.parent.license_feature_used.labels(app=feature.app,name=feature.name).set(feature.inUse)
             for user in feature.userList:
                 try:
-                    if not DEV:
-                        self.parent.license_feature_used_users.labels(app=feature.app,name=feature.name,user=user.name,
-                                                                    host=user.hostName,device=user.device).set(1)
+                    self.parent.license_feature_used_users.labels(app=feature.app,name=feature.name,user=user.name,
+                                                                host=user.hostName,device=user.device).set(1)
                 except:
                     print >> sys.stderr, "Error en used_users.label"
                     user.printUserToError()
@@ -346,16 +349,15 @@ class Apps(object):
             app = App(self, appCfg)
             self.appList.append(app)
 
-        if not DEV:
-            self.license_feature_used = Gauge('license_feature_used','number of licenses used',['app','name'])
-            self.license_feature_issued = Gauge('license_feature_issued','max number of licenses',['app','name'])
-            self.license_feature_used_users = Gauge('license_feature_used_users','license used by user',['app','name','user','host','device'])
-            self.license_server_status = Gauge('license_server_status','status of the license server',['app','fqdn','master','port','version'])
+        self.license_feature_used = Gauge('license_feature_used','number of licenses used',['app','name'])
+        self.license_feature_issued = Gauge('license_feature_issued','max number of licenses',['app','name'])
+        self.license_feature_used_users = Gauge('license_feature_used_users','license used by user',['app','name','user','host','device'])
+        self.license_server_status = Gauge('license_server_status','status of the license server',['app','fqdn','master','port','version'])
         self.PORT = self.cfg['config']['port']
         self.SLEEP = self.cfg['config']['sleep']
-        self.LSMONCMD = self.cfg['config']['lsmon_cmd']
-        self.LMUTILCMD = self.cfg['config']['lmutil_cmd']
-        self.RLMUTILCMD = self.cfg['config']['rlmutil_cmd']
+        self.LSMONCMD = self.cfg['config']['lsmon_cmd'] if not isWindows() else self.cfg['config']['lsmon_cmd'].replace('/','\\')
+        self.LMUTILCMD = self.cfg['config']['lmutil_cmd'] if not isWindows() else self.cfg['config']['lmutil_cmd'].replace('/','\\')
+        self.RLMUTILCMD = self.cfg['config']['rlmutil_cmd'] if not isWindows() else self.cfg['config']['rlmutil_cmd'].replace('/','\\')
 
     def parse(self):
         for app in self.appList:
@@ -366,18 +368,16 @@ class Apps(object):
             app.printFeatures()
 
     def updateMetric(self):
-        if not DEV:
-            self.license_feature_used_users._metrics.clear()
+        self.license_feature_used_users._metrics.clear()
         for app in self.appList:
             app.updateMetric()
 
 if __name__ == '__main__':
     apps = Apps(CONFIG_FILE)
-    if not DEV:
-        start_http_server(apps.PORT)
+    start_http_server(apps.PORT)
     while True:
         apps.updateMetric()
         if VERBOSE:
             apps.printApps()
-            sys.stdout.flush()
-            time.sleep(apps.SLEEP)
+        sys.stdout.flush()
+        time.sleep(apps.SLEEP)

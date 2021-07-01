@@ -1,0 +1,149 @@
+licenses:
+  - name: MATLAB R2018b
+    type: lmutil
+    license_server: 27002@ucolic01.ctx.uco.es
+    features_to_include: MATLAB,SIMULINK,Audio_System_Toolbox,Control_Toolbox,Signal_Blocks,Neural_Network_Toolbox,GADS_Toolbox,Image_Toolbox,Optimization_Toolbox,PDE_Toolbox,Signal_Toolbox,Statistics_Toolbox,Symbolic_Toolbox,Identification_Toolbox
+    monitor_users: True
+    monitor_reservations: False
+  - name: COMSOL
+    type: lmutil
+    license_server: 1718@ucolic01.ctx.uco.es
+    features_to_include: COMSOLCKL,ELECTROCHEMISTRYCKL,COMSOLGUICKL
+    monitor_users: True
+    monitor_reservations: False
+  - name: MATLAB CAMPUS
+    type: lmutil
+    license_server: 27001@ucolic03.ctx.uco.es
+    features_to_include: ALL
+    monitor_users: True
+    monitor_reservations: False
+  - name: MATHCAD
+    type: lmutil
+    license_server: 7788@ucolic01.ctx.uco.es
+    features_to_include: MATHCAD,254,255,256,257
+    monitor_users: True
+    monitor_reservations: False
+  - name: AUTODESK
+    type: lmutil
+    license_server: 27001@ucolic02.ctx.uco.es
+    features_to_include: 86604ACD_2017_0F,87229AMECH_PP_2020_0F
+    monitor_users: True
+    monitor_reservations: False
+  - name: ORIGIN2018
+    type: lmutil
+    license_server: 27002@ucolic02.ctx.uco.es
+    features_to_include: OriginPro
+    monitor_users: True
+    monitor_reservations: False
+  - name: ANSYS
+    type: lmutil
+    license_server: 1055@ucoad03.uco.es
+    features_to_include: aa_ds,aa_mcad,aa_t_me,aim_mp1,aa_r_me
+    monitor_users: True
+    monitor_reservations: False
+  - name: SPSS
+    type: lsmon
+    license_server: ucolic01.ctx.uco.es
+    features_to_include: 1200
+    monitor_users: True
+    monitor_reservations: False
+  - name: SAP2000
+    type: lsmon
+    license_server: ucolic03.ctx.uco.es
+    features_to_include: SAPUL
+    monitor_users: True
+    monitor_reservations: False
+  - name: GRAPHER
+    type: lsmon
+    license_server: ucolic01.ctx.uco.es
+    features_to_include: Grapher
+    monitor_users: True
+    monitor_reservations: False
+  - name: ACAD2019-CIV3D
+    type: lmutil
+    license_server: 27000@ucolic01.ctx.uco.es
+    features_to_include: 87624C3DGO_2022_0F
+    monitor_users: True
+  - name: PALISADE
+    type: lmutil
+    license_server: 28000@ucolic02.ctx.uco.es
+    features_to_include: Palisade_Network,DecisionTools80_Industrial
+    monitor_users: True
+  - name: SOLIDWORKS
+    type: lmutil
+    license_server: 25734@ucolic01.ctx.uco.es
+    features_to_include: solidworks,cae_cosmosfloworks_elec,cae_cosmosfloworks_hvac,cae_cwadvpro,campro,edrw,elecpro,plastics_advanced,swmbd_std,swofficepremium,swpdmstd_cadeditor,swsustainability,visupro
+    monitor_users: True
+    monitor_reservations: False
+  - name: TESTLAB
+    type: rlmutil
+    license_server: 27500@ucolic02.ctx.uco.es
+    rlm_item_label: v14.0,v17.0,v18.0
+    rlm_count_label: "count:"
+    features_to_include: ALL
+    monitor_users: True
+    monitor_reservations: False
+  - name: NVIDIAGRID
+    type: webtable
+    license_server: ucolic01.ctx.uco.es
+    feature_prefix_url: "http://ucolic01.ctx.uco.es:8080/licserver/manageFeatureUsage_view.action;jsessionid=FAC0E15E15CEFDC8C40971B198ED33B0?page=1"
+    feature_suffix_url: ""
+    feature_max_url_param: null
+    features_to_include: Quadro-Virtual-DWS,GRID-Virtual-Apps
+    feature_table_index: 9
+    feature_label_name: "Feature"
+    feature_label_total: "Count"
+    feature_label_in_use: "Available"
+    used_as_free: True
+    monitor_users: True
+    users_prefix_url: "http://ucolic01.ctx.uco.es:8080/licserver/manageFeatureUsage_featureDetails.action?feature.featureId="
+    users_suffix_url: "&page1"
+    users_index_url: 1,2
+    users_table_index: 3
+    users_table_skip_header: 0
+    users_search_feature: False
+    users_index_feature: True
+    users_label_feature_name: null
+    users_label_username: 0
+    users_label_hostname: 3
+    users_label_date: 5
+  - name: DIFFRAC
+    type: webtable
+    license_server: ucolic03.ctx.uco.es
+    feature_prefix_url: "http://ucolic03.ctx.uco.es:22350/Server.html"
+    feature_suffix_url: ""
+    feature_max_url_param: null
+    features_to_include: DIFFRAC.EVA V3.x,DIFFRAC.TOPAS V4.2,DIFFRAC.LEPTOS R V1,DIFFRAC.NANOFIT V1.2
+    feature_table_index: 1
+    feature_label_name: "Nombre"
+    feature_label_total: "Licencias"
+    feature_label_in_use: "Estado.3"
+    used_as_free: False
+    monitor_users: True
+    users_prefix_url: "http://ucolic03.ctx.uco.es:22350/ServerUser.html"
+    users_suffix_url: null
+    users_index_url: 1
+    users_table_index: 1
+    users_table_skip_header: null
+    users_search_feature: True
+    users_index_feature: False
+    users_label_feature_name: "Product Item"
+    users_label_hostname: "Cliente"
+    users_label_username: null
+    users_label_date: null
+  - name: ROBOTSTUDIO
+    type: web
+    license_server: ucolic02.ctx.uco.es
+    prefix_url: "http://ucolic02.ctx.uco.es:2468/Web/Usage/For/RobotStudio/7.x"
+    suffix_url: ""
+    max_url_param: 0
+    used_as_free: True
+    match_exist: (?:<h2>Current usage of )(?P<featureName>.+?)(?:<\/h2>)
+    match_total: "(?:<h4>Total resources: )(?P<featureCount>.+?)(?:<\/h4><\/div>)"
+    match_used: "(?:<h4>Resources available: )(?P<featureCount>.+?)(?:<\/h4><\/div>)"
+config:
+  port: 8000
+  sleep: 60
+  lsmon_cmd: ./lsmon
+  lmutil_cmd: ./lmutil lmstat -a -c
+  rlmutil_cmd: ./rlmutil rlmstat -a -c
