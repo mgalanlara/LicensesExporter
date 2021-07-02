@@ -1,17 +1,61 @@
 licenses:
   - name: HYDRUS
-    type: web
-    license_server: ucolic03.ctx.uco.es
-    prefix_url: "http://ucolic03.ctx.uco.es:1947/_int_/features.html"
-    suffix_url: ""
-    max_url_param: 0
+    type: webtablejs
+    skip: False
+    monitor_users: True
     used_as_free: False
-    match_exist: (?:<h2>Current usage of )(?P<featureName>.+?)(?:<\/h2>)
-    match_total: "(?:<h4>Total resources: )(?P<featureCount>.+?)(?:<\/h4><\/div>)"
-    match_used: "(?:<h4>Resources available: )(?P<featureCount>.+?)(?:<\/h4><\/div>)"
+    license_server: ucolic03.ctx.uco.es
+    feature_prefix_url: "http://ucolic03.ctx.uco.es:1947/_int_/features.html"
+    feature_suffix_url: ""
+    feature_max_url_param: null
+    features_js_iloc: 0
+    features_js_id: mydata
+    features_js_attr: innerHTML
+    features_to_include: 22,26
+    feature_label_name: Feature
+    feature_label_total: Limit
+    feature_label_in_use: Sessions
+    users_js_id: mydata
+    users_js_attr: innerHTML
+    users_js_iloc: 0
+    users_prefix_url: "http://ucolic03.ctx.uco.es:1947/_int_/sessions.html"
+    users_suffix_url: null
+    users_index_url: 1
+    users_table_skip_header: null
+    users_search_feature: True
+    users_index_feature: False
+    users_label_feature_name: Feature
+    users_label_hostname: Machine
+    users_label_username: User
+    users_label_date: "Login\xA0Time"
+  - name: NVIDIAGRID
+    type: webtable
+    skip: False
+    monitor_users: True
+    used_as_free: True
+    license_server: ucolic01.ctx.uco.es
+    feature_prefix_url: "http://ucolic01.ctx.uco.es:8080/licserver/manageFeatureUsage_view.action;jsessionid=FAC0E15E15CEFDC8C40971B198ED33B0?page=1"
+    feature_suffix_url: ""
+    feature_max_url_param: null
+    features_to_include: Quadro-Virtual-DWS,GRID-Virtual-Apps
+    feature_table_index: 9
+    feature_label_name: "Feature"
+    feature_label_total: "Count"
+    feature_label_in_use: "Available"
+    users_prefix_url: "http://ucolic01.ctx.uco.es:8080/licserver/manageFeatureUsage_featureDetails.action?feature.featureId="
+    users_suffix_url: "&page1"
+    users_index_url: 1,2
+    users_table_index: 3
+    users_table_skip_header: 0
+    users_search_feature: False
+    users_index_feature: True
+    users_label_feature_name: null
+    users_label_username: 0
+    users_label_hostname: 3
+    users_label_date: 5
 config:
   port: 8000
-  sleep: 60
+  sleep: 15
   lsmon_cmd: ./lsmon
   lmutil_cmd: ./lmutil lmstat -a -c
   rlmutil_cmd: ./rlmutil rlmstat -a -c

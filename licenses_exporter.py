@@ -5,6 +5,7 @@ Tonin 2018. University of Cordoba
 
 import subprocess
 from prometheus_client import Gauge, start_http_server
+from selenium import webdriver
 import time
 import sys
 import os
@@ -64,7 +65,7 @@ class Feature(object):
             return True
         else:
             return False
-        
+
     def printFeature(self):
         print("app=",self.app," feature=",self.name," max=",self.maxLicenses," current=",self.inUse)
         for user in self.userList:
@@ -76,7 +77,7 @@ class App(object):
         for key,value in argsDict.items():
             if key in ['features_to_include','users_index_url','rlm_item_label']:
                 setattr(self,key,str(value).split(","))
-            else:    
+            else:
                 setattr(self,key,value)
         self.featureList = []
         if(self.type == 'lsmon'):
@@ -89,7 +90,109 @@ class App(object):
             self.parse = self.parseWeb
         elif(self.type == 'webtable'):
             self.parse = self.parseWebTable
+        elif(self.type == 'webtablejs'):
+            self.parse = self.parseWebTableJs
         self.online = False
+
+    def df_parse_features(self,feature_tbl):
+        has_features = False
+        if DEBUG: print("DEBUG: features_to_include: ",self.features_to_include)
+        if not feature_tbl.empty:
+            #Hemos encontrado cosas
+            for index,row in feature_tbl.iterrows():
+                if TRACE: trace(self.name,"En bucle iterrows de df_parse_features")
+                if not isNan(row[self.feature_label_name]):
+                    if TRACE: trace(self.name,"not isNan en  df_parse_features")
+                    if DEBUG: print("DEBUG: row[self.feature_label_name: ",row[self.feature_label_name])
+                    if row[self.feature_label_name] in self.features_to_include or self.features_to_include[0] == 'ALL':
+                        if DEBUG:
+                            print("DEBUD: ",row[self.feature_label_name]," Total: ",row[self.feature_label_total]," Usadas: ",row[self.feature_label_in_use])
+                        self.online = True
+                        feature = Feature(row[self.feature_label_name],self.name)
+                        self.featureList.append(feature)
+                        feature.maxLicenses = float(row[self.feature_label_total])
+                        feature.inUse = float(row[self.feature_label_in_use])
+                        if self.used_as_free:
+                            feature.inUse = feature.maxLicenses - feature.inUse
+                        has_features = True
+        return has_features
+
+    def df_parse_users(self,users_tbl,current_feat):
+        if not users_tbl.empty:
+            for index,row in users_tbl.iterrows():
+                if index == self.users_table_skip_header:
+                    continue
+                if self.users_search_feature:
+                    #TODO: En base a codemeter solo sacamos info del hostname, ya lo iremos ampliando
+                    for feat in self.featureList:
+                        if feat.name in row[self.users_label_feature_name]:
+                            user = User(value(row,self.users_label_username) if self.users_label_username is not None else "None")
+                            feat.userList.append(user)
+                            user.hostName = value(row,self.users_label_hostname) if self.users_label_hostname is not None else "None"
+                            user.date = value(row,self.users_label_date) if self.users_label_date is not None else "None"
+                if self.users_index_feature:
+                    user = User(value(row,self.users_label_username) if self.users_label_username is not None else "None")
+                    current_feat.userList.append(user)
+                    user.hostName = value(row,self.users_label_hostname) if self.users_label_hostname is not None else "None"
+                    user.date = value(row,self.users_label_date) if self.users_label_date is not None else "None"
+
+
+    def parseWebTableJs(self):
+        if TRACE: trace(self.name," Entrando en parseWebJS")
+        self.featureList = []
+        self.online = False
+        driver = webdriver.Chrome()
+
+        #Parse features
+        url_range  = self.feature_max_url_param if self.feature_max_url_param is not None else 2
+        for i in range(1,url_range):
+            if TRACE: trace(self.name," En bucle parseweb")
+            #Componemos la url
+            if url_range == 2:
+                url = self.feature_prefix_url
+            else:
+                url = self.feature_prefix_url + str(i) + self.feature_suffix_url
+
+        driver.get(url)
+        table = driver.find_element_by_id(self.features_js_id)
+        table_html = table.get_attribute(self.features_js_attr)
+        feature_tbl = pd.read_html(table_html)[0]
+        if self.features_js_iloc is not None:
+            feature_tbl.columns = feature_tbl.iloc[int(self.features_js_iloc)]
+            feature_tbl.drop([int(self.features_js_iloc)],inplace=True)
+        #driver.quit()
+        has_features = self.df_parse_features(feature_tbl)
+
+        #Parse users
+        if has_features and self.monitor_users:
+            for i in self.users_index_url:
+                passFeature = False
+                #Me salto los features que no se esten usando
+                for current_feat in self.featureList:
+                    if current_feat.name == self.features_to_include[self.users_index_url.index(i)]:
+                        if current_feat.isUsing() is False:
+                            passFeature = True
+                        else:
+                            break
+                if passFeature:
+                    continue
+
+                if self.users_suffix_url is not None:
+                    url = self.users_prefix_url + str(i) + self.users_suffix_url
+                else:
+                    url = self.users_prefix_url
+
+                driver.get(url)
+                table = driver.find_element_by_id(self.users_js_id)
+                table_html = table.get_attribute(self.users_js_attr)
+                users_tbl = pd.read_html(table_html)[0]
+                if self.users_js_iloc is not None:
+                    users_tbl.columns = users_tbl.iloc[int(self.users_js_iloc)]
+                    users_tbl.drop([int(self.users_js_iloc)],inplace=True)
+                driver.quit()
+                self.df_parse_users(users_tbl,current_feat)
+        else:
+            driver.quit()
 
     def parseWebTable(self):
         if TRACE: trace(self.name," Entrando en parseWebTable")
@@ -98,7 +201,7 @@ class App(object):
 
         #Bucle para iterar segun el parametro
         #Si el parametro es null no hay sufijo
-        url_range  = self.fature_max_url_param if self.feature_max_url_param is not None else 2
+        url_range  = self.feature_max_url_param if self.feature_max_url_param is not None else 2
 
         for i in range(1,url_range):
             if TRACE: trace(self.name," En bucle parseweb")
@@ -111,59 +214,29 @@ class App(object):
         all_feature_tables = pd.read_html(url)
         feature_tbl = all_feature_tables[self.feature_table_index]
         #monitorizamos las licencias
-        if not feature_tbl.empty:
-            #Hemos encontrado cosas
-            for index,row in feature_tbl.iterrows():
-                if not isNan(row[self.feature_label_name]):
-                    if row[self.feature_label_name] in self.features_to_include:
-                        if DEBUG:
-                            print(row[self.feature_label_name]," Total: ",row[self.feature_label_total]," Usadas: ",row[self.feature_label_in_use])
-                        self.online = True
-                        feature = Feature(row[self.feature_label_name],self.name)
-                        self.featureList.append(feature)
-                        feature.maxLicenses = float(row[self.feature_label_total])
-                        feature.inUse = float(row[self.feature_label_in_use])
-                        if self.used_as_free:
-                            feature.inUse = feature.maxLicenses - feature.inUse
+        has_features = self.df_parse_features(feature_tbl)
         #monitorizamos los usuarios:
-            if self.monitor_users:
-                for i in self.users_index_url:
-                    passFeature = False
-                    #Me salto los features que no se esten usando
-                    for current_feat in self.featureList:
-                        if current_feat.name == self.features_to_include[self.users_index_url.index(i)]:
-                            if current_feat.isUsing() is False: 
-                                passFeature = True
-                            else:
-                                break
-                    if passFeature: 
-                        continue        
+        if has_features and self.monitor_users:
+            for i in self.users_index_url:
+                passFeature = False
+                #Me salto los features que no se esten usando
+                for current_feat in self.featureList:
+                    if current_feat.name == self.features_to_include[self.users_index_url.index(i)]:
+                        if current_feat.isUsing() is False:
+                            passFeature = True
+                        else:
+                            break
+                if passFeature:
+                    continue
 
-                    if self.users_suffix_url is not None:
-                        url = self.users_prefix_url + str(i) + self.users_suffix_url
-                    else:
-                        url = self.users_prefix_url
+                if self.users_suffix_url is not None:
+                    url = self.users_prefix_url + str(i) + self.users_suffix_url
+                else:
+                    url = self.users_prefix_url
 
-                    all_users_table = pd.read_html(url)
-                    users_tbl = all_users_table[self.users_table_index]
-
-                    if not users_tbl.empty:
-                        for index,row in users_tbl.iterrows():
-                            if index == self.users_table_skip_header:
-                                continue
-                            if self.users_search_feature:                            
-                                #TODO: En base a codemeter solo sacamos info del hostname, ya lo iremos ampliando
-                                for feat in self.featureList:
-                                    if feat.name in row[self.users_label_feature_name]:
-                                        user = User(value(row,self.users_label_username) if self.users_label_username is not None else "None")
-                                        feat.userList.append(user)
-                                        user.hostName = value(row,self.users_label_hostname) if self.users_label_hostname is not None else "None"
-                                        user.date = value(row,self.users_label_date) if self.users_label_date is not None else "None" 
-                            if self.users_index_feature:
-                                user = User(value(row,self.users_label_username) if self.users_label_username is not None else "None")
-                                current_feat.userList.append(user)
-                                user.hostName = value(row,self.users_label_hostname) if self.users_label_hostname is not None else "None"
-                                user.date = value(row,self.users_label_date) if self.users_label_date is not None else "None" 
+                all_users_table = pd.read_html(url)
+                users_tbl = all_users_table[self.users_table_index]
+                self.df_parse_users(users_tbl,current_feat)
 
     def parseWeb(self):
         if TRACE: trace(self.name," Entrando en parseweb")
@@ -185,14 +258,13 @@ class App(object):
                 url = self.prefix_url + str(i) + self.suffix_url
             else:
                 url = self.prefix_url
-                    
+
             if DEBUG: print("URL: ",self.name," ",url)
             #Realizamos el request
             Response = requests.get(url)
             if TRACE: print("TRACE: ",self.name," parseweb despues de request")
             content = Response.content
-            print(content)
-        
+
             if WRITEHTML:
                 name = str(i) + ".web"
                 file = open(name,"wb")
@@ -220,7 +292,7 @@ class App(object):
                 feature.inUse = float(inUse[0])
                 if self.used_as_free:
                     feature.inUse = feature.maxLicenses - feature.inUse
-                    if DEBUG:            
+                    if DEBUG:
                         print("Total ",feature.name,": ",feature.maxLicenses)
                         print("Inuse ",feature.name,": ",feature.inUse)
                 else:
@@ -346,8 +418,9 @@ class Apps(object):
         with open(cfgFile, 'r') as yamlFile:
             self.cfg = yaml.safe_load(yamlFile)
         for appCfg in self.cfg['licenses']:
-            app = App(self, appCfg)
-            self.appList.append(app)
+            if not appCfg['skip']:
+                app = App(self, appCfg)
+                self.appList.append(app)
 
         self.license_feature_used = Gauge('license_feature_used','number of licenses used',['app','name'])
         self.license_feature_issued = Gauge('license_feature_issued','max number of licenses',['app','name'])
