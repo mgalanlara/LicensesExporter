@@ -136,6 +136,17 @@ class App(object):
                     user.hostName = value(row,self.users_label_hostname) if self.users_label_hostname is not None else "None"
                     user.date = value(row,self.users_label_date) if self.users_label_date is not None else "None"
 
+    def parseWebUrl(self):
+        url_range  = self.feature_max_url_param if self.feature_max_url_param is not None else 2
+        for i in range(1,url_range):
+            if TRACE: trace(self.name," En bucle parseweburl")
+            #Componemos la url
+            if url_range == 2:
+                url = self.feature_prefix_url
+            else:
+                url = self.feature_prefix_url + str(i) + self.feature_suffix_url
+        return url
+        
 
     def parseWebTableJs(self):
         if TRACE: trace(self.name," Entrando en parseWebJS")
@@ -144,15 +155,7 @@ class App(object):
         driver = webdriver.Chrome()
 
         #Parse features
-        url_range  = self.feature_max_url_param if self.feature_max_url_param is not None else 2
-        for i in range(1,url_range):
-            if TRACE: trace(self.name," En bucle parseweb")
-            #Componemos la url
-            if url_range == 2:
-                url = self.feature_prefix_url
-            else:
-                url = self.feature_prefix_url + str(i) + self.feature_suffix_url
-
+        url = self.parseWebUrl()
         driver.get(url)
         table = driver.find_element_by_id(self.features_js_id)
         table_html = table.get_attribute(self.features_js_attr)
@@ -199,18 +202,7 @@ class App(object):
         self.featureList = []
         self.online = False
 
-        #Bucle para iterar segun el parametro
-        #Si el parametro es null no hay sufijo
-        url_range  = self.feature_max_url_param if self.feature_max_url_param is not None else 2
-
-        for i in range(1,url_range):
-            if TRACE: trace(self.name," En bucle parseweb")
-            #Componemos la url
-            if url_range == 2:
-                url = self.feature_prefix_url
-            else:
-                url = self.feature_prefix_url + str(i) + self.feature_suffix_url
-
+        url = self.parseWebUrl()
         all_feature_tables = pd.read_html(url)
         feature_tbl = all_feature_tables[self.feature_table_index]
         #monitorizamos las licencias
