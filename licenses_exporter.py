@@ -19,9 +19,13 @@ CONFIG_FILE = 'config.yml'
 WRITEHTML = False
 DEBUG = False
 TRACE = False
-VERBOSE = True
+VERBOSE = False
+SUMMARY = True
 
 if DEBUG: VERBOSE = True
+
+driver = None
+
 
 def isWindows():
     ret = True if os.name == 'nt' else False
@@ -67,18 +71,30 @@ class Feature(object):
             return False
 
     def printFeature(self):
+        if not VERBOSE:
+            return
         print("app=",self.app," feature=",self.name," max=",self.maxLicenses," current=",self.inUse)
         for user in self.userList:
             user.printUser()
-
 class App(object):
     def __init__(self, parent, argsDict):
         self.parent = parent
         for key,value in argsDict.items():
-            if key in ['features_to_include','users_index_url','rlm_item_label']:
-                setattr(self,key,str(value).split(","))
-            else:
-                setattr(self,key,value)
+            setattr(self,key,value)
+        #Hacemos lista los strings separados por comas
+        try:
+            self.features['include'] =  str(self.features['include']).split(",")
+        except:
+            pass
+        try:
+            self.users['url']['index'] = str(self.users['url']['index']).split(",")
+        except:
+            pass
+        try:
+            self.label['item'] = self.label['item'].split(",")
+        except:
+            pass
+
         self.featureList = []
         if(self.type == 'lsmon'):
             self.parse = self.parseLsmon
@@ -93,25 +109,35 @@ class App(object):
         elif(self.type == 'webtablejs'):
             self.parse = self.parseWebTableJs
         self.online = False
+        driver = None
 
     def df_parse_features(self,feature_tbl):
         has_features = False
-        if DEBUG: print("DEBUG: features_to_include: ",self.features_to_include)
+        if DEBUG: print("DEBUG: features_to_include: ",self.features['include'])
         if not feature_tbl.empty:
             #Hemos encontrado cosas
             for index,row in feature_tbl.iterrows():
                 if TRACE: trace(self.name,"En bucle iterrows de df_parse_features")
-                if not isNan(row[self.feature_label_name]):
+                if not isNan(row[self.features['label']['name']]):
                     if TRACE: trace(self.name,"not isNan en  df_parse_features")
-                    if DEBUG: print("DEBUG: row[self.feature_label_name: ",row[self.feature_label_name])
-                    if row[self.feature_label_name] in self.features_to_include or self.features_to_include[0] == 'ALL':
+                    #No siempre tiene que estar product definido, lo ponemos en un try
+                    try:
+                        if self.product['include'] is not None:
+                            if not str(self.product['include']) in str(row[self.product['label']]):
+                                continue
+                    except:
+                        pass
+                    if DEBUG: print("DEBUG: row[self.feature_label_name: ",row[self.features['label']['name']])
+                    if row[self.features['label']['name']] in self.features['include'] or self.features['include'][0] == 'ALL':
                         if DEBUG:
-                            print("DEBUD: ",row[self.feature_label_name]," Total: ",row[self.feature_label_total]," Usadas: ",row[self.feature_label_in_use])
+                            print("DEBUG: ",row[self.features['label']['name']]," Total: ",row[self.features['label']['total']]," Usadas: ",row[self.features['label']['used']])
                         self.online = True
-                        feature = Feature(row[self.feature_label_name],self.name)
+                        feature = Feature(row[self.features['label']['name']],self.name)
                         self.featureList.append(feature)
-                        feature.maxLicenses = float(row[self.feature_label_total])
-                        feature.inUse = float(row[self.feature_label_in_use])
+                        feature.maxLicenses = float(row[self.features['label']['total']])
+                        feature.inUse = float(row[self.features['label']['used']])
+                        if isNan(feature.inUse):
+                            feature.inUse = 0;
                         if self.used_as_free:
                             feature.inUse = feature.maxLicenses - feature.inUse
                         has_features = True
@@ -120,80 +146,91 @@ class App(object):
     def df_parse_users(self,users_tbl,current_feat):
         if not users_tbl.empty:
             for index,row in users_tbl.iterrows():
-                if index == self.users_table_skip_header:
+                if index == self.users['table']['skip_header']:
                     continue
-                if self.users_search_feature:
+                if self.users['table']['method'] == 'search':
                     #TODO: En base a codemeter solo sacamos info del hostname, ya lo iremos ampliando
                     for feat in self.featureList:
-                        if feat.name in row[self.users_label_feature_name]:
-                            user = User(value(row,self.users_label_username) if self.users_label_username is not None else "None")
+                        if feat.name in row[self.users['label']['featurename']]:
+                            user = User(value(row,self.users['label']['username'])) if self.users['label']['username'] is not None else "None"
                             feat.userList.append(user)
-                            user.hostName = value(row,self.users_label_hostname) if self.users_label_hostname is not None else "None"
-                            user.date = value(row,self.users_label_date) if self.users_label_date is not None else "None"
-                if self.users_index_feature:
-                    user = User(value(row,self.users_label_username) if self.users_label_username is not None else "None")
+                            user.hostName = value(row,self.users['label']['hostname']) if self.users['label']['hostname'] is not None else "None"
+                            user.date = value(row,self.users['label']['date']) if self.users['label']['date'] is not None else "None"
+                if self.users['table']['method'] == 'index':
+                    user = User(value(row,self.users['label']['username']) if self.users['label']['username'] is not None else "None")
                     current_feat.userList.append(user)
-                    user.hostName = value(row,self.users_label_hostname) if self.users_label_hostname is not None else "None"
-                    user.date = value(row,self.users_label_date) if self.users_label_date is not None else "None"
+                    user.hostName = value(row,self.users['label']['hostname']) if self.users['label']['hostname'] is not None else "None"
+                    user.date = value(row,self.users['label']['date']) if self.users['label']['date'] is not None else "None"
 
-    def parseWebUrl(self):
-        url_range  = self.feature_max_url_param if self.feature_max_url_param is not None else 2
+    def parseWebFeaturesUrl(self):
+        url_range  = self.features['url']['index'] if self.features['url']['index'] is not None else 2
         for i in range(1,url_range):
             if TRACE: trace(self.name," En bucle parseweburl")
             #Componemos la url
             if url_range == 2:
-                url = self.feature_prefix_url
+                url = self.features['url']['prefix']
             else:
-                url = self.feature_prefix_url + str(i) + self.feature_suffix_url
+                url = self.features['url']['prefix'] + str(i) + self.features['url']['suffix']
         return url
-        
+
+    def parseWebUsersUrl(self,i):
+        passFeature = False
+        #Me salto los features que no se esten usando
+        for current_feat in self.featureList:
+            if current_feat.name == self.features['include'][self.users['url']['index'].index(i)]:
+                if current_feat.isUsing() is False:
+                    passFeature = True
+                else:
+                    break
+        if passFeature:
+            return None,None
+        if self.users['url']['suffix'] is not None:
+            url = self.users['url']['prefix'] + str(i) + self.users['url']['suffix']
+        else:
+            url = self.users['url']['prefix']
+        return current_feat,url
 
     def parseWebTableJs(self):
         if TRACE: trace(self.name," Entrando en parseWebJS")
         self.featureList = []
         self.online = False
-        driver = webdriver.Chrome()
+        if self.parent.WEBDRIVER == 'local':
+            driver = webdriver.Chrome()
+        elif self.parent.WEBDRIVER == 'remote':
+            firefox_options = webdriver.FirefoxOptions()
+            driver = webdriver.Remote( 
+                command_executor=f"http://sysdocker3.priv.uco.es:4444/wd/hub",
+                options=firefox_options
+            )
+            driver.set_page_load_timeout(10)
 
         #Parse features
-        url = self.parseWebUrl()
+        url = self.parseWebFeaturesUrl()
         driver.get(url)
-        table = driver.find_element_by_id(self.features_js_id)
-        table_html = table.get_attribute(self.features_js_attr)
+        table = driver.find_element_by_id(self.features['js']['id'])
+        table_html = table.get_attribute(self.features['js']['attr'])
         feature_tbl = pd.read_html(table_html)[0]
-        if self.features_js_iloc is not None:
-            feature_tbl.columns = feature_tbl.iloc[int(self.features_js_iloc)]
-            feature_tbl.drop([int(self.features_js_iloc)],inplace=True)
-        #driver.quit()
+        if self.features['js']['iloc'] is not None:
+            feature_tbl.columns = feature_tbl.iloc[int(self.features['js']['iloc'])]
+            feature_tbl.drop([int(self.features['js']['iloc'])],inplace=True)
         has_features = self.df_parse_features(feature_tbl)
-
+        if not has_features:
+            driver.quit()
+            return
         #Parse users
-        if has_features and self.monitor_users:
-            for i in self.users_index_url:
-                passFeature = False
-                #Me salto los features que no se esten usando
-                for current_feat in self.featureList:
-                    if current_feat.name == self.features_to_include[self.users_index_url.index(i)]:
-                        if current_feat.isUsing() is False:
-                            passFeature = True
-                        else:
-                            break
-                if passFeature:
-                    continue
-
-                if self.users_suffix_url is not None:
-                    url = self.users_prefix_url + str(i) + self.users_suffix_url
-                else:
-                    url = self.users_prefix_url
-
-                driver.get(url)
-                table = driver.find_element_by_id(self.users_js_id)
-                table_html = table.get_attribute(self.users_js_attr)
-                users_tbl = pd.read_html(table_html)[0]
-                if self.users_js_iloc is not None:
-                    users_tbl.columns = users_tbl.iloc[int(self.users_js_iloc)]
-                    users_tbl.drop([int(self.users_js_iloc)],inplace=True)
-                driver.quit()
-                self.df_parse_users(users_tbl,current_feat)
+        if has_features and self.users['monitor']:
+            for i in self.users['url']['index']:
+                current_feat,url = self.parseWebUsersUrl(i)
+                if url is not None:
+                    driver.get(url)
+                    table = driver.find_element_by_id(self.users['js']['id'])
+                    table_html = table.get_attribute(self.users['js']['attr'])
+                    users_tbl = pd.read_html(table_html)[0]
+                    if self.users['js']['iloc'] is not None:
+                        users_tbl.columns = users_tbl.iloc[int(self.users['js']['iloc'])]
+                        users_tbl.drop([int(self.users['js']['iloc'])],inplace=True)
+                    self.df_parse_users(users_tbl,current_feat)
+                    driver.quit()
         else:
             driver.quit()
 
@@ -202,95 +239,60 @@ class App(object):
         self.featureList = []
         self.online = False
 
-        url = self.parseWebUrl()
+        url = self.parseWebFeaturesUrl()
         all_feature_tables = pd.read_html(url)
-        feature_tbl = all_feature_tables[self.feature_table_index]
+        feature_tbl = all_feature_tables[self.features['table']['index']]
         #monitorizamos las licencias
         has_features = self.df_parse_features(feature_tbl)
         #monitorizamos los usuarios:
-        if has_features and self.monitor_users:
-            for i in self.users_index_url:
-                passFeature = False
-                #Me salto los features que no se esten usando
-                for current_feat in self.featureList:
-                    if current_feat.name == self.features_to_include[self.users_index_url.index(i)]:
-                        if current_feat.isUsing() is False:
-                            passFeature = True
-                        else:
-                            break
-                if passFeature:
-                    continue
-
-                if self.users_suffix_url is not None:
-                    url = self.users_prefix_url + str(i) + self.users_suffix_url
-                else:
-                    url = self.users_prefix_url
-
-                all_users_table = pd.read_html(url)
-                users_tbl = all_users_table[self.users_table_index]
-                self.df_parse_users(users_tbl,current_feat)
+        if has_features and self.users['monitor']:
+            for i in self.users['url']['index']:
+                current_feat,url = self.parseWebUsersUrl(i)
+                if url is not None:
+                    all_users_table = pd.read_html(url)
+                    users_tbl = all_users_table[self.users['table']['index']]
+                    self.df_parse_users(users_tbl,current_feat)
 
     def parseWeb(self):
         if TRACE: trace(self.name," Entrando en parseweb")
         self.featureList = []
         self.online = False
- #       try:
-            #Bucle para iterar segun el parametro
-            #Si el parametro es 0 no hay sufijo
-        if self.max_url_param == 0:
-            self.max_url_param = 2
-            NoSuffix = True
-        else:
-            NoSuffix = False
 
-        for i in range(1,self.max_url_param):
-            if TRACE: trace(self.name," En bucle parseweb")
-            #Componemos la url
-            if not NoSuffix:
-                url = self.prefix_url + str(i) + self.suffix_url
+        url = self.parseWebUrl()
+        if DEBUG: print("URL: ",self.name," ",url)
+        #Realizamos el request
+        Response = requests.get(url)
+        if TRACE: print("TRACE: ",self.name," parseweb despues de request")
+        content = Response.content
+
+        if WRITEHTML:
+            name = str(i) + ".web"
+            file = open(name,"wb")
+            file.write(content)
+            file.close()
+            print("DEBUGURL: ",self.name," ",url)
+            print("DEBUGREGEX: ",self.match_exist)
+
+        #Vemos si existe algo para este parametro
+        match = re.findall(self.match_exist, str(content), re.MULTILINE)
+        if DEBUG: print("PARSEWEBMATCH: ",self.name," ",match)
+        if match:
+            if TRACE: trace(self.name,"En if match parseweb")
+            feature = Feature(match[0],self.name)
+            self.online = True
+            self.featureList.append(feature)
+            #Existe luego leemos el numero total de licencias y las que estan en uso
+            total = re.findall(self.features['match']['total'], str(content), re.MULTILINE)
+            inUse = re.findall(self.features['match']['used'], str(content), re.MULTILINE)
+            feature.maxLicenses = float(total[0])
+            feature.inUse = float(inUse[0])
+            if self.used_as_free:
+                feature.inUse = feature.maxLicenses - feature.inUse
+                if DEBUG:
+                    print("Total ",feature.name,": ",feature.maxLicenses)
+                    print("Inuse ",feature.name,": ",feature.inUse)
             else:
-                url = self.prefix_url
-
-            if DEBUG: print("URL: ",self.name," ",url)
-            #Realizamos el request
-            Response = requests.get(url)
-            if TRACE: print("TRACE: ",self.name," parseweb despues de request")
-            content = Response.content
-
-            if WRITEHTML:
-                name = str(i) + ".web"
-                file = open(name,"wb")
-                file.write(content)
-                file.close()
-                print("DEBUGURL: ",self.name," ",url)
-                print("DEBUGREGEX: ",self.match_exist)
-
-            #Vemos si existe algo para este parametro
-            match = re.findall(self.match_exist, str(content), re.MULTILINE)
-            if DEBUG: print("PARSEWEBMATCH: ",self.name," ",match)
-            if match:
-                if TRACE: trace(self.name,"En if match parseweb")
-                feature = Feature(match[0],self.name)
-                self.online = True
-                self.featureList.append(feature)
-                #Existe luego leemos el numero total de licencias y las que estan en uso
-                if TRACE: trace("PARSEWEBMATCH1: ",self.name)
-                total = re.findall(self.match_total, str(content), re.MULTILINE)
-                if TRACE: trace("PARSEWEBMATCH2: ",self.name)
-                inUse = re.findall(self.match_used, str(content), re.MULTILINE)
-                if TRACE: trace("PARSEWEBMATCH3: ",self.name)
-                feature.maxLicenses = float(total[0])
-                if TRACE: trace("PARSEWEBMATCH4: ",self.name)
-                feature.inUse = float(inUse[0])
-                if self.used_as_free:
-                    feature.inUse = feature.maxLicenses - feature.inUse
-                    if DEBUG:
-                        print("Total ",feature.name,": ",feature.maxLicenses)
-                        print("Inuse ",feature.name,": ",feature.inUse)
-                else:
-                    if DEBUG: print("DEBUG: ",self.name," ",i,"nomatch. Pattern ",self.match_exist)
-#        except  Exception as e:
-#            if VERBOSE: print("EXC_PARSEWEB: ",self.name," ",e)
+                if DEBUG: print("DEBUG: ",self.name," ",i,"nomatch. Pattern ",self.match_exist)
 
     def parseLsmon(self):
         self.featureList = []
@@ -305,7 +307,7 @@ class App(object):
                 for line in lines:
                     if 'Feature name' in line:
                         aux = line.split(":",1)[1][1:-3].replace('"','')
-                        if aux in self.features_to_include or self.features_to_include[0] == "ALL":
+                        if aux in self.features['include'] or self.features['include'][0] == "ALL":
                             feature = Feature(aux, self.name)
                             self.online = True
                             self.featureList.append(feature)
@@ -315,10 +317,10 @@ class App(object):
                         feature.maxLicenses = float(line.split(":",1)[1][1:])
                     if 'Unreserved tokens in use' in line and feature:
                         feature.inUse = float(line.split(":",1)[1][1:])
-                    if 'User name' in line and feature and self.monitor_users:
+                    if 'User name' in line and feature and self.users['monitor']:
                         user = User(line.split(":",1)[1][1:])
                         feature.userList.append(user)
-                    if 'Host name' in line and feature and self.monitor_users:
+                    if 'Host name' in line and feature and self.users['monitor']:
                         user.hostName =  line.split(":",1)[1][1:]
 
     def parseLmutil(self):
@@ -333,7 +335,7 @@ class App(object):
                     if 'Users of' in line:
                         r = re.search('Users of (.*):  \(Total of (.*)licenses? issued;  Total of (.*) licenses? in use\)',line)
                         if r is not None:
-                        	if r.group(1) in self.features_to_include or self.features_to_include[0] == "ALL":
+                        	if r.group(1) in self.features['include'] or self.features['include'][0] == "ALL":
                             		feature = Feature(r.group(1), self.name)
                             		self.online = True
                             		feature.maxLicenses = float(r.group(2))
@@ -341,7 +343,7 @@ class App(object):
                             		self.featureList.append(feature)
                         	else:
                             		feature = None
-                    if ', start' in line and feature and self.monitor_users and r is not None:
+                    if ', start' in line and feature and self.users['monitor'] and r is not None:
                         r = re.search('^\s+(.*) (.*) (.*) \((.*)\) \((.*)/(.*) (.*)\), start (.*)',line)
                         user = User(r.group(1))
                         user.hostName = r.group(2)
@@ -358,13 +360,13 @@ class App(object):
                 lines = _output.split('\n')
                 for line in lines:
                     feature = None
-                    if any(label in line for label in self.rlm_item_label):
+                    if any(label in line for label in self.label['item']):
                         feat_name = line.strip().split(" ")[0]
                     #monitor features
-                    if self.rlm_count_label in line:
+                    if self.label['count'] in line:
                         r = re.search('.+count: (.*), (.*) inuse: (.*),',line)
                         if r is not None:
-                        	if r.group(1) in self.features_to_include or self.features_to_include[0] == "ALL":
+                        	if r.group(1) in self.features['include'] or self.features['include'][0] == "ALL":
                             		feature = Feature(feat_name, self.name)
                             		self.online = True
                             		feature.maxLicenses = float(r.group(1))
@@ -373,7 +375,7 @@ class App(object):
                         	else:
                             		feature = None
                     #monitor users
-                    if 'handle' in line  and self.monitor_users:
+                    if 'handle' in line  and self.users['monitor']:
                         r = re.search('^\s+(.*) (.*): (.*)@(.*) (.*) at (.*)  \(handle.*',line)
                         user = User(r.group(3))
                         user.hostName = r.group(4)
@@ -387,6 +389,10 @@ class App(object):
     def printFeatures(self):
         for feature in self.featureList:
             feature.printFeature()
+        if self.featureList:
+            return True
+        else:
+            return False
 
     def updateMetric(self):
         self.parse()
@@ -410,9 +416,16 @@ class Apps(object):
         with open(cfgFile, 'r') as yamlFile:
             self.cfg = yaml.safe_load(yamlFile)
         for appCfg in self.cfg['licenses']:
-            if not appCfg['skip']:
-                app = App(self, appCfg)
-                self.appList.append(app)
+            if self.cfg['onlythis'] is None:
+                if not appCfg['skip']:
+                    app = App(self, appCfg)
+                    self.appList.append(app)
+            else:
+                if isinstance(self.cfg['onlythis'],str):
+                    self.cfg['onlythis'] = self.cfg['onlythis'].split(",")
+                if appCfg['name'] in self.cfg['onlythis']:
+                    app = App(self, appCfg)
+                    self.appList.append(app)
 
         self.license_feature_used = Gauge('license_feature_used','number of licenses used',['app','name'])
         self.license_feature_issued = Gauge('license_feature_issued','max number of licenses',['app','name'])
@@ -423,26 +436,42 @@ class Apps(object):
         self.LSMONCMD = self.cfg['config']['lsmon_cmd'] if not isWindows() else self.cfg['config']['lsmon_cmd'].replace('/','\\')
         self.LMUTILCMD = self.cfg['config']['lmutil_cmd'] if not isWindows() else self.cfg['config']['lmutil_cmd'].replace('/','\\')
         self.RLMUTILCMD = self.cfg['config']['rlmutil_cmd'] if not isWindows() else self.cfg['config']['rlmutil_cmd'].replace('/','\\')
+        self.WEBDRIVER = self.cfg['config']['webdriver']
 
     def parse(self):
         for app in self.appList:
             app.parse()
 
     def printApps(self):
+        totalOnline = 0
+        totalOffline = 0
         for app in self.appList:
-            app.printFeatures()
+            if app.printFeatures():
+                totalOnline = totalOnline + 1
+            else:
+                totalOffline = totalOffline + 1
+        if SUMMARY:
+            print("TOTAL ONLINE: ",totalOnline," TOTAL OFFLINE: ",totalOffline)
 
     def updateMetric(self):
         self.license_feature_used_users._metrics.clear()
         for app in self.appList:
             app.updateMetric()
 
+
 if __name__ == '__main__':
     apps = Apps(CONFIG_FILE)
     start_http_server(apps.PORT)
+#try:
     while True:
         apps.updateMetric()
-        if VERBOSE:
+        if VERBOSE or SUMMARY:
             apps.printApps()
+
         sys.stdout.flush()
         time.sleep(apps.SLEEP)
+#except Exception as exc:
+#    print("EXCEPCION: ",exc),
+        if driver is not None:
+            print("CERRANDO DRIVER")
+            driver.quit()
