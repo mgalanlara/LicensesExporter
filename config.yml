@@ -1,4 +1,4 @@
-onlythis: null
+onlythis: 
 licenses:
   - name: MATLAB R2018b
     type: lmutil
@@ -37,7 +37,15 @@ licenses:
     skip: False
     license_server: 27001@ucolic02.ctx.uco.es
     features:
-      include: 86604ACD_2017_0F,87229AMECH_PP_2020_0F
+      include: ALL
+      translate:
+          search: ^\d{5}(?P<feature_name>[A-Z0-9\_]+)_(?P<feature_suffix>\d{4})
+          translations:
+            AMECH_PP: Autocad Mechanical
+            RECAP: Autodesk RECAP
+            RVT: Autodesk REVIT
+            CIV3D: Autocad Civil 3D
+            C3DGO: Autodesk Grading Optimization
     users:
       monitor: True
   - name: ORIGIN2018
@@ -56,6 +64,14 @@ licenses:
       include: aa_ds,aa_mcad,aa_t_me,aim_mp1,aa_r_me
     users:
       monitor: True
+  - name: CHEMCAD
+    type: lsmon
+    skip: False
+    license_server: ucolic01.ctx.uco.es
+    features:
+      include: __CC-B,__CC-D,__CC-SEAT,__CC-SS,__CC-T
+    users:
+      monitor: True      
   - name: SPSS
     type: lsmon
     skip: False
@@ -216,6 +232,22 @@ licenses:
         username: 0
         hostname: 3
         date: 5
+
+  - name: ROBOTSTUDIO
+    type: web
+    skip: False
+    used_as_free: True
+    license_server: ucolic02.ctx.uco.es
+    features:
+      url:
+        prefix: "http://ucolic02.ctx.uco.es:2468/Web/Usage/For/RobotStudio/7.x"
+        suffix: ""
+        index: null
+      match:
+        exist: (?:<h2>Current usage of )(?P<featureName>.+?)(?:<\/h2>)
+        total: "(?:<h4>Total resources: )(?P<featureCount>.+?)(?:<\/h4><\/div>)"
+        used: "(?:<h4>Resources available: )(?P<featureCount>.+?)(?:<\/h4><\/div>)"
+
   - name: TESTLAB
     type: rlmutil
     skip: False
@@ -228,10 +260,14 @@ licenses:
     users:
       monitor: True
     monitor_reservations: False
+
 config:
   port: 8000
   sleep: 15
   lsmon_cmd: ./lsmon
   lmutil_cmd: ./lmutil lmstat -a -c
   rlmutil_cmd: ./rlmutil rlmstat -a -c
-  webdriver: remote
+  webdriver:
+    type: remote
+    private-url:  "http://selenium-hub:4444/wd/hub"
+    public-url:  "http://sysdocker3.priv.uco.es:4444/wd/hub"
