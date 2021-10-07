@@ -1,3 +1,9 @@
 
 config-test.yml
 yaml-tree.py
+
+*.pyc
+
+prusocket.py
+
+__pycache__/

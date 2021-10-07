@@ -59,9 +59,9 @@ licenses:
   - name: ANSYS
     type: lmutil
     skip: False
-    license_server: 1055@ucoad03.uco.es
+    license_server: 1055@ucolic03.ctx.uco.es
     features:
-      include: aa_ds,aa_mcad,aa_t_me,aim_mp1,aa_r_me
+      include: ALL
     users:
       monitor: True
   - name: CHEMCAD
@@ -260,6 +260,14 @@ licenses:
     users:
       monitor: True
     monitor_reservations: False
+
+  - name: AUTOSIM
+    type: rawsocket
+    skip: False
+    license_server: ucolic02.ctx.uco.es
+    license_port: 5000
+    timeout: 3
+    recv_bytes: 10
 
 config:
   port: 8000
