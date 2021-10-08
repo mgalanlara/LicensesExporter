@@ -71,7 +71,7 @@ licenses:
     features:
       include: __CC-B,__CC-D,__CC-SEAT,__CC-SS,__CC-T
     users:
-      monitor: True      
+      monitor: True
   - name: SPSS
     type: lsmon
     skip: False
