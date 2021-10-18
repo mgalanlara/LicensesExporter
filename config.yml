@@ -1,4 +1,4 @@
-onlythis: 
+onlythis: SPSS
 licenses:
   - name: MATLAB R2018b
     type: lmutil
