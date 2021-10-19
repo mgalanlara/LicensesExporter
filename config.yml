@@ -1,4 +1,4 @@
-onlythis: SPSS
+onlythis: 
 licenses:
   - name: MATLAB R2018b
     type: lmutil
@@ -39,6 +39,7 @@ licenses:
     features:
       include: ALL
       translate:
+          at_stage: 1
           search: ^\d{5}(?P<feature_name>[A-Z0-9\_]+)_(?P<feature_suffix>\d{4})
           translations:
             AMECH_PP: Autocad Mechanical
@@ -78,6 +79,12 @@ licenses:
     license_server: ucolic01.ctx.uco.es
     features:
       include: 1200
+      translate:
+        at_stage: 2
+        search: ^(?P<feature_name>[0-9]+)(?P<feature_suffix>)
+        translations:
+          '1200250': SPSS Version 25
+          '1200280': SPSS Version 28
     users:
       monitor: True
   - name: SAP2000
@@ -120,7 +127,6 @@ licenses:
       include: ALL
     users:
       monitor: True
-
   - name: HYDRUS
     type: webtablejs
     skip: False
@@ -260,7 +266,6 @@ licenses:
     users:
       monitor: True
     monitor_reservations: False
-
   - name: AUTOSIM
     type: rawsocket
     skip: False
@@ -268,7 +273,14 @@ licenses:
     license_port: 5000
     timeout: 3
     recv_bytes: 10
-
+  - name: PRESTO
+    type: rawsocket
+    skip: False
+    license_server: 192.168.115.73
+    license_port: 5001
+    timeout: 3
+    recv_bytes: 10
+    connect_only: True
 config:
   port: 8000
   sleep: 15

@@ -21,7 +21,7 @@ CONFIG_FILE = 'config.yml'
 WRITEHTML = False
 DEBUG = False
 TRACE = False
-VERBOSE = True
+VERBOSE = False
 SUMMARY = True
 
 if DEBUG: VERBOSE = True
@@ -82,16 +82,22 @@ class Feature(object):
 		#Vemos si tenemos translaciones de etiquetes de features
 		try:
 			dummy = parent.features['translate']
+			self.translatable = True
 		except:
+			self.translatable = False
 			return
 
 		#Realizamos la traduccion del self.name
-		r = re.search(parent.features['translate']['search'],name)
-		if r is not None:
-			self.name = parent.features['translate']['translations'][r.group('feature_name')] + " " + r.group('feature_suffix')
-		else:
-			#Si no encontramos traslacion debemos marcarla para borrar
-			self.name = "NULL"
+		if parent.features['translate']['at_stage'] == 1:
+			self.translate()
+
+	def translate(self):
+			r = re.search(self.parent.features['translate']['search'],self.name)
+			if r is not None:
+				self.name = self.parent.features['translate']['translations'][r.group('feature_name')] + " " + r.group('feature_suffix')
+			else:
+				#Si no encontramos traslacion debemos marcarla para borrar
+				self.name = "NULL"
 
 	def isUsing(self):
 		if self.inUse > 0.0:
@@ -203,6 +209,7 @@ class App(object):
 				url = self.features['url']['prefix']
 			else:
 				url = self.features['url']['prefix'] + str(i) + self.features['url']['suffix']
+			if DEBUG: print("URL: ",url)
 		return url
 
 	def parseWebUsersUrl(self,i):
@@ -232,8 +239,9 @@ class App(object):
 		driver = self.parent.driver
 		try:
 			driver.get(url)
-		except:
+		except:			
 			#Si se produce una excepcion retornamos
+			if DEBUG: print("Excepcion en driver.get de pwtJs")
 			return
 		table = driver.find_element_by_id(self.features['js']['id'])
 		table_html = table.get_attribute(self.features['js']['attr'])
@@ -241,12 +249,15 @@ class App(object):
 			feature_tbl = pd.read_html(table_html)[0]
 		except:
 			#Si se produce una excepcion retornamos
+			if DEBUG: print("Excepcion en read_html de pwtJs")
 			return
 		if self.features['js']['iloc'] is not None:
 			feature_tbl.columns = feature_tbl.iloc[int(self.features['js']['iloc'])]
 			feature_tbl.drop([int(self.features['js']['iloc'])],inplace=True)
 		has_features = self.df_parse_features(feature_tbl)
+		if DEBUG: print("Has features: ",has_features)
 		if not has_features:
+			if DEBUG: print("Salgo por not has features")
 			return
 		#Parse users
 		#Lo meto todo en un try por si falla
@@ -264,6 +275,7 @@ class App(object):
 							users_tbl.drop([int(self.users['js']['iloc'])],inplace=True)
 						self.df_parse_users(users_tbl,current_feat)
 		except:
+			if DEBUG: print("Excepcion en parse users de pwtJs")
 			return
 			
 	def parseWebTable(self):
@@ -350,6 +362,9 @@ class App(object):
 						feature.inUse = float(line.split(":",1)[1][1:])
 					if  'Feature version' in line and feature:
 						feature.name = feature.name + line.split(":",1)[1][1:].strip('"')
+						if feature.translatable:
+							if self.features['translate']['at_stage'] == 2:
+								feature.translate()
 					if 'User name' in line and feature and self.users['monitor']:
 						user = User(line.split(":",1)[1][1:])
 						feature.userList.append(user)
@@ -427,7 +442,10 @@ class App(object):
 		sock.settimeout(self.timeout)
 		try:
 			sock.connect((host, self.license_port))
-			a = sock.recv(self.recv_bytes)
+			if hasattr(self,'connect_only'):
+				pass
+			else:
+				a = sock.recv(self.recv_bytes)
 			feature = Feature(self.name,self.name,self)
 			self.online = True
 			feature.maxLicenses = 999

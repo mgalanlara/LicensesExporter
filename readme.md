@@ -92,6 +92,7 @@ Configuración detallada y por tipo de parser
     - **count:** La etiqueta que indicará que un item está licenciado.
 - **translate:** Encabezado de la sub-subsección de traducción de los nombres de las features. Para algunos productos el nombre es muy descriptivo, pero para otros utilizan un código que no deja nada claro el nombre de la feature. La traducción se realiza sobre el nombre del feature ya parseado.
   - **search:** La expresión regular que buscará un nombre y un sufijo para el código que aparece en el nombre del feature, por si el sufijo expresa la versión del producto.
+  - **at_stage:** Dependiendo del parser y del tipo de licencia puede que la traducción haya que realizarla en diferentes pasos de la creación del objeto feature. El valor será un ordinal. Si el valor es *1* la traducción se hará en la creación del objeto feature. El resto de ordinales dependerán de cada uno de los parsers. Se utilizará cuando nos interese discriminar un feature según la versión del mismo por ejemplo.
   - **translations:** El encabezado de la lista de traducciones.  Aparecerán en el fichero yaml como pares *<original: traducción>*
 ### **Parámetros de la subsección licenses-users** ###
 No todos los sistemas de licencias aportan información sobre detalles de los usuarios que están usando cada una de las licencias. Tampoco la información que aportan es igual en todos, por lo que es bastante complicado estandarizar esta parte del parsing.
@@ -112,3 +113,4 @@ No todos los sistemas de licencias aportan información sobre detalles de los us
 ### **Parámetros específicos del parser rawsocket** ###
 - **timeout:** El timeout tras el que si no puede abrir el socket considerará que el servidor de licencias no está activo y no añadirá ninguna feature.
 - **recv_bytes:** El número de bytes que intentará leer para comprobar que el socket aparte de poder abrirse devuelve información.
+- **connect_only:** En el caso de que simplemente queramos comprobar que hay conexión con el servidor y el puerto sin intentar leer nada más.
