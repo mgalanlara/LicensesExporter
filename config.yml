@@ -1,9 +1,17 @@
-onlythis: 
+onlythis:
 licenses:
   - name: MATLAB R2018b
     type: lmutil
     skip: False
     license_server: 27002@ucolic01.ctx.uco.es
+    features:
+      include: ALL
+    users:
+      monitor: True
+  - name: SOLID EDGE
+    type: lmutil
+    skip: False
+    license_server: 28000@ucolic03.ctx.uco.es
     features:
       include: ALL
     users:
@@ -278,6 +286,14 @@ licenses:
     skip: False
     license_server: 192.168.115.73
     license_port: 5001
+    timeout: 3
+    recv_bytes: 10
+    connect_only: True
+  - name: DEFORM
+    type: rawsocket
+    skip: False
+    license_server: ucolic03.ctx.uco.es
+    license_port: 34445
     timeout: 3
     recv_bytes: 10
     connect_only: True

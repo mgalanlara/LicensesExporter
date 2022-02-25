@@ -374,6 +374,7 @@ class App(object):
 	def parseLmutil(self):
 		self.featureList = []
 		self.online = False
+		feature = None
 		output = subprocess.getstatusoutput(self.parent.LMUTILCMD + ' ' + self.license_server)
 		for _output in output:
 			if type(_output) == type(''):
@@ -390,7 +391,6 @@ class App(object):
 								appendFeature(self.featureList,feature)
 							else:
 								feature = None
-
 					if ', start' in line and feature and self.users['monitor']:
 						r = re.search('^\s+(.*) (.*) (.*) \((.*)\) \((.*)/(.*) (.*)\), start (.*)',line)
 						user = User(r.group(1))
@@ -545,11 +545,11 @@ if __name__ == '__main__':
 	apps = Apps(CONFIG_FILE)
 	start_http_server(apps.PORT)
 	while True:
-		try:
+		#try:
 			apps.updateMetric()
 			if VERBOSE or SUMMARY:
 				apps.printApps()
 			sys.stdout.flush()
-		except Exception as exc:
-			print("EXCEPCION: ",exc),
-		time.sleep(apps.SLEEP)
+		#except Exception as exc:
+			#print("EXCEPCION: ",exc),
+			time.sleep(apps.SLEEP)
