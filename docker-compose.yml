@@ -1,0 +1,40 @@
+version: '3'
+
+networks:
+  defaults:
+    external:
+      name: licencias
+
+
+services:
+   prometheus:
+     image: prom/prometheus
+     container_name: prometheus
+     ports:
+       - "9090:9090"
+     command: [ "--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus", "--web.console.libraries=/usr/share/prometheus/console_libraries", "--web.console.templates=/usr/share/prometheus/consoles", "--storage.tsdb.retention.time=365d" ]
+     volumes:
+       - ./prometheus_data:/prometheus
+       - ./prometheus_data/prometheus.yml:/etc/prometheus/prometheus.yml
+       #- /etc/localtime:/etc/localtime:ro
+
+   licensesexporter:
+     image: registry.gitlab.uco.es/tonin/licensesexporter
+     container_name: licenses_exporter
+     ports:
+       - "9318:8000"
+     volumes:
+       #- /etc/localtime:/etc/localtime:ro
+       - ./config.yml:/config.yml
+       - ./licenses_exporter.py:/licenses_exporter.py
+
+   grafana:
+     ports:
+       - "3000:3000"
+     container_name: grafana
+     environment:
+       - "GF_SERVER_ROOT_URL=http://grafana.server.name"
+       - "GF_SECURITY_ADMIN_PASSWORD=secret"
+     image: grafana/grafana
+     volumes:
+       - ./grafana_data:/var/lib/grafana

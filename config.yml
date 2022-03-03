@@ -305,5 +305,5 @@ config:
   rlmutil_cmd: ./rlmutil rlmstat -a -c
   webdriver:
     type: remote
-    private-url:  "http://selenium-hub:4444/wd/hub"
+    private-url:  "http://sysdocker3.priv.uco.es:4444/wd/hub"
     public-url:  "http://sysdocker3.priv.uco.es:4444/wd/hub"

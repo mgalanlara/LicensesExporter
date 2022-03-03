@@ -21,7 +21,7 @@ CONFIG_FILE = 'config.yml'
 WRITEHTML = False
 DEBUG = False
 TRACE = False
-VERBOSE = False
+VERBOSE = True
 SUMMARY = True
 
 if DEBUG: VERBOSE = True

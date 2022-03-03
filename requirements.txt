@@ -1,0 +1,6 @@
+prometheus_client
+ruamel.yaml
+pandas
+selenium
+requests
+lxml
