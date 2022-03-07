@@ -51,11 +51,13 @@ docker-deploy:
         for SERVER in $PROD_SERVERS; do
              echo "Desplegando en $SERVER"
              #Crear directorios
-             ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "mkdir $SERVER_USER_HOME/prometheus_data"
-             ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "mkdir $SERVER_USER_HOME/grafana_data"
-             #Copiar configuraciones de grafana y prometheus
-             scp -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER prometheus.yml $SERVER_USER@$SERVER:$SERVER_USER_HOME
-             scp -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER grafana.db $SERVER_USER@$SERVER:$SERVER_USER_HOME
+             ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "mkdir -p $SERVER_USER_HOME/prometheus_data"
+             ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "mkdir -p $SERVER_USER_HOME/grafana_data"
+             #Copiar configuraciones de licensesexporter grafana y prometheus
+             scp -i $ID_RSA -o StrictHostKeyChecking=no config.yml $SERVER_USER@$SERVER:$SERVER_USER_HOME
+             scp -i $ID_RSA -o StrictHostKeyChecking=no licenses_exporter.py $SERVER_USER@$SERVER:$SERVER_USER_HOME
+             scp -i $ID_RSA -o StrictHostKeyChecking=no prometheus.yml $SERVER_USER@$SERVER:$SERVER_USER_HOME
+             scp -i $ID_RSA -o StrictHostKeyChecking=no grafana.db $SERVER_USER@$SERVER:$SERVER_USER_HOME
              #Interactuamos con el docker remoto
              ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
              scp -i $ID_RSA -o StrictHostKeyChecking=no docker-compose.yml $SERVER_USER@$SERVER:$SERVER_USER_HOME
