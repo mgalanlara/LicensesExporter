@@ -15,9 +15,9 @@ ENV LANGUAGE es_ES.UTF-8
 ENV LC_ALL es_ES.UTF-8
 COPY requirements.txt /
 COPY licenses_exporter.py /
-COPY LinuxBins/lsmon /
-COPY LinuxBins/lmutil /
-COPY LinuxBins/rlmutil /
+COPY --chown=498 LinuxBins/lsmon /
+COPY --chown=498 LinuxBins/lmutil /
+COPY --chown=498 LinuxBins/rlmutil /
 
 RUN pip3 install -r /requirements.txt
 
