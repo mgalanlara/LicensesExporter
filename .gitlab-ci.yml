@@ -53,7 +53,9 @@ docker-deploy:
              #Crear directorios
              ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "mkdir -p $SERVER_USER_HOME/prometheus_data"
              ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "mkdir -p $SERVER_USER_HOME/grafana_data"
-             #Copiar configuraciones de grafana y prometheus
+             #Copiar configuraciones de licensesexporter grafana y prometheus
+             scp -i $ID_RSA -o StrictHostKeyChecking=no config.yml $SERVER_USER@$SERVER:$SERVER_USER_HOME
+             scp -i $ID_RSA -o StrictHostKeyChecking=no licenses_exporter.py $SERVER_USER@$SERVER:$SERVER_USER_HOME
              scp -i $ID_RSA -o StrictHostKeyChecking=no prometheus.yml $SERVER_USER@$SERVER:$SERVER_USER_HOME
              scp -i $ID_RSA -o StrictHostKeyChecking=no grafana.db $SERVER_USER@$SERVER:$SERVER_USER_HOME
              #Interactuamos con el docker remoto
