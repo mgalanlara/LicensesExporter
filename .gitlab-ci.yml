@@ -62,6 +62,6 @@ docker-deploy:
              ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
              scp -i $ID_RSA -o StrictHostKeyChecking=no docker-compose.yml $SERVER_USER@$SERVER:$SERVER_USER_HOME
              ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "docker-compose pull"
-             ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "cd $SERVER_USER_HOME && docker-compose -f docker-compose.yml pull && HOME=$SERVER_USER_HOME docker-compose -f docker-compose.yml up -d"
+             ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "cd $SERVER_USER_HOME && docker-compose -f docker-compose.yml pull && HOME=$SERVER_USER_HOME USER=$(id -u) docker-compose -f docker-compose.yml up -d"
         done
   when: manual
