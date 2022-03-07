@@ -18,6 +18,7 @@ services:
        - ./prometheus.yml:/etc/prometheus/prometheus.yml
        #- /etc/localtime:/etc/localtime:ro
 
+
    licensesexporter:
      image: registry.gitlab.uco.es/tonin/licensesexporter
      container_name: licenses_exporter
