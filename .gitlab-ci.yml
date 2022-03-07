@@ -51,8 +51,8 @@ docker-deploy:
         for SERVER in $PROD_SERVERS; do
              echo "Desplegando en $SERVER"
              #Crear directorios
-             ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "mkdir $SERVER_USER_HOME/prometheus_data"
-             ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "mkdir $SERVER_USER_HOME/grafana_data"
+             ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "mkdir -p $SERVER_USER_HOME/prometheus_data"
+             ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER "mkdir -p $SERVER_USER_HOME/grafana_data"
              #Copiar configuraciones de grafana y prometheus
              scp -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER prometheus.yml $SERVER_USER@$SERVER:$SERVER_USER_HOME
              scp -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER grafana.db $SERVER_USER@$SERVER:$SERVER_USER_HOME
