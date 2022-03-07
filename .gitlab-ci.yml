@@ -37,7 +37,7 @@ docker-deploy:
   image: alpine:latest
   stage: deploy
   tags:
-    - deployment
+    - deploy
   variables:
     # should be set up at Gitlab CI env vars
     SERVER_USER: $CI_DEPLOY_USER
