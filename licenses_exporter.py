@@ -21,7 +21,7 @@ CONFIG_FILE = 'config.yml'
 WRITEHTML = False
 DEBUG = False
 TRACE = False
-VERBOSE = True
+VERBOSE = False
 SUMMARY = True
 
 if DEBUG: VERBOSE = True
@@ -239,7 +239,7 @@ class App(object):
 		driver = self.parent.driver
 		try:
 			driver.get(url)
-		except:			
+		except:
 			#Si se produce una excepcion retornamos
 			if DEBUG: print("Excepcion en driver.get de pwtJs")
 			return
@@ -275,16 +275,23 @@ class App(object):
 							users_tbl.drop([int(self.users['js']['iloc'])],inplace=True)
 						self.df_parse_users(users_tbl,current_feat)
 		except:
-			if DEBUG: print("Excepcion en parse users de pwtJs")
+			print("Excepcion en parse users de pwtJs")
 			return
-			
+
 	def parseWebTable(self):
 		if TRACE: trace(self.name," Entrando en parseWebTable")
 		self.featureList = []
 		self.online = False
 
 		url = self.parseWebFeaturesUrl()
-		all_feature_tables = pd.read_html(url)
+		#Aquí puede fallar, controlamos el error
+		try:
+			all_feature_tables = pd.read_html(url)
+		except Exception as exc:
+			print("Excepción en pd.read_html de parseWebTable")
+			print("Excepción: ",exc)
+			return
+
 		feature_tbl = all_feature_tables[self.features['table']['index']]
 		#monitorizamos las licencias
 		has_features = self.df_parse_features(feature_tbl)
