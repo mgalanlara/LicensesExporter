@@ -4,7 +4,7 @@ Tonin 2018. University of Cordoba
 """
 
 import subprocess
-from prometheus_client import Gauge, start_http_server
+from prometheus_client import Gauge, start_http_server, REGISTRY, PROCESS_COLLECTOR, PLATFORM_COLLECTOR, GC_COLLECTOR
 from selenium import webdriver
 from datetime import datetime
 import time
@@ -15,6 +15,11 @@ import ruamel.yaml as yaml
 import requests
 import pandas as pd
 import socket
+
+#unregister default metrics
+REGISTRY.unregister(PROCESS_COLLECTOR)
+REGISTRY.unregister(PLATFORM_COLLECTOR)
+REGISTRY.unregister(GC_COLLECTOR)
 
 #Licenses & config file
 CONFIG_FILE = 'config.yml'
