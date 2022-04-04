@@ -246,15 +246,22 @@ class App(object):
 			driver.get(url)
 		except:
 			#Si se produce una excepcion retornamos
-			if DEBUG: print("Excepcion en driver.get de pwtJs")
+			print("Excepcion en driver.get de pwtJs")
 			return
-		table = driver.find_element_by_id(self.features['js']['id'])
-		table_html = table.get_attribute(self.features['js']['attr'])
+		try:
+			table = driver.find_element_by_id(self.features['js']['id'])
+		except:
+			print("Excepción en driver.find de PwtJS")
+			return
+		try:
+			table_html = table.get_attribute(self.features['js']['attr'])
+		except:
+			print("Excepción en table.get_attribute de PwtJS")
+			return
 		try:
 			feature_tbl = pd.read_html(table_html)[0]
 		except:
-			#Si se produce una excepcion retornamos
-			if DEBUG: print("Excepcion en read_html de pwtJs")
+			print("Excepcion en read_html de pwtJs")
 			return
 		if self.features['js']['iloc'] is not None:
 			feature_tbl.columns = feature_tbl.iloc[int(self.features['js']['iloc'])]
