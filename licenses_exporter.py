@@ -300,7 +300,7 @@ class App(object):
 		try:
 			all_feature_tables = pd.read_html(url)
 		except Exception as exc:
-			print("Excepción en pd.read_html de parseWebTable")
+			print("Excepción en pd.read_html (features) de parseWebTable")
 			print("Excepción: ",exc)
 			return
 
@@ -312,7 +312,12 @@ class App(object):
 			for i in self.users['url']['index']:
 				current_feat,url = self.parseWebUsersUrl(i)
 				if url is not None:
-					all_users_table = pd.read_html(url)
+					try:
+						all_users_table = pd.read_html(url)
+					except Exception as exc:
+						print("Excepción en pd.read_html (users) de parseWebTable")
+						print("Excepción: ",exc)
+					return
 					users_tbl = all_users_table[self.users['table']['index']]
 					self.df_parse_users(users_tbl,current_feat)
 
