@@ -329,7 +329,12 @@ class App(object):
 		url = self.parseWebFeaturesUrl()
 		if DEBUG: print("URL: ",self.name," ",url)
 		#Realizamos el request
-		Response = requests.get(url)
+		try:
+			Response = requests.get(url)
+		except Exception as exc:
+			print("Excepción en request.get  de parseWeb")
+			print("Excepción: ",exc)
+			return
 		if TRACE: print("TRACE: ",self.name," parseweb despues de request")
 		content = Response.content
 
