@@ -466,7 +466,12 @@ class App(object):
 		self.featureList = []
 		self.online = False
 
-		host = socket.gethostbyname(self.license_server)
+		try:
+			host = socket.gethostbyname(self.license_server)
+		except Exception as exc:
+			print("Excepción en gethostbyname  de parRawSocket")
+			print("Excepción: ",exc)
+		return
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.settimeout(self.timeout)
 		try:
