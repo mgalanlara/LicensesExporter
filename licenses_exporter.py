@@ -471,7 +471,7 @@ class App(object):
 		except Exception as exc:
 			print("Excepción en gethostbyname  de parRawSocket")
 			print("Excepción: ",exc)
-		return
+			return
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.settimeout(self.timeout)
 		try:
