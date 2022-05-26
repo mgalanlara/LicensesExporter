@@ -3,6 +3,7 @@ licenses_exporter: A prometheus client to export lsmon & lmutil licenses
 Tonin 2018. University of Cordoba
 """
 
+import traceback
 import subprocess
 from prometheus_client import Gauge, start_http_server, REGISTRY, PROCESS_COLLECTOR, PLATFORM_COLLECTOR, GC_COLLECTOR
 from selenium import webdriver
@@ -576,14 +577,19 @@ class Apps(object):
 
 
 if __name__ == '__main__':
-	apps = Apps(CONFIG_FILE)
+	try:
+		apps = Apps(CONFIG_FILE)
+	except Exception as exc:
+		print("Excepción en configuración: ",exc)
+		exit(1)
 	start_http_server(apps.PORT)
 	while True:
-		#try:
-			apps.updateMetric()
+			try:
+				apps.updateMetric()
+			except Exception as exc:
+				print("EXCEPCION: ",exc),
+				print(traceback.format_exc())
 			if VERBOSE or SUMMARY:
 				apps.printApps()
 			sys.stdout.flush()
-		#except Exception as exc:
-			#print("EXCEPCION: ",exc),
 			time.sleep(apps.SLEEP)
