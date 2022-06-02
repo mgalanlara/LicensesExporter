@@ -248,12 +248,14 @@ class App(object):
 		except Exception as exc:
 			#Si se produce una excepcion retornamos
 			print("Excepcion en driver.get de pwtJs")
+			print("URL: ",url)
 			print("Exception: ",exc)
 			return
 		try:
 			table = driver.find_element_by_id(self.features['js']['id'])
 		except Exception as exc:
 			print("Excepción en driver.find de PwtJS")
+	
 			print("Exception: ",exc)
 			return
 		try:
