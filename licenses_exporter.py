@@ -245,24 +245,28 @@ class App(object):
 		driver = self.parent.driver
 		try:
 			driver.get(url)
-		except:
+		except Exception as exc:
 			#Si se produce una excepcion retornamos
 			print("Excepcion en driver.get de pwtJs")
+			print("Exception: ",exc)
 			return
 		try:
 			table = driver.find_element_by_id(self.features['js']['id'])
-		except:
+		except Exception as exc:
 			print("Excepción en driver.find de PwtJS")
+			print("Exception: ",exc)
 			return
 		try:
 			table_html = table.get_attribute(self.features['js']['attr'])
-		except:
+		except Exception as exc:
 			print("Excepción en table.get_attribute de PwtJS")
+			print("Exception: ",exc)
 			return
 		try:
 			feature_tbl = pd.read_html(table_html)[0]
-		except:
+		except Exception as exc:
 			print("Excepcion en read_html de pwtJs")
+			print("Exception: ",exc)
 			return
 		if self.features['js']['iloc'] is not None:
 			feature_tbl.columns = feature_tbl.iloc[int(self.features['js']['iloc'])]
@@ -287,8 +291,9 @@ class App(object):
 							users_tbl.columns = users_tbl.iloc[int(self.users['js']['iloc'])]
 							users_tbl.drop([int(self.users['js']['iloc'])],inplace=True)
 						self.df_parse_users(users_tbl,current_feat)
-		except:
+		except Exception as exc:
 			print("Excepcion en parse users de pwtJs")
+			print("Exception: ",exc)
 			return
 
 	def parseWebTable(self):
@@ -486,7 +491,9 @@ class App(object):
 			feature.maxLicenses = 999
 			feature.inUse = 888
 			appendFeature(self.featureList,feature)
-		except:
+		except Exception as exc:
+			print("Excepción en connect de parRawSocket")
+			print("Excepción: ",exc)
 			pass
 		sock.close()
 
@@ -510,7 +517,9 @@ class App(object):
 				try:
 					self.parent.license_feature_used_users.labels(app=feature.app,name=feature.name,user=user.name,
 																host=user.hostName,device=user.device).set(1)
-				except:
+				except Exception as exc:
+					print("Excepción en updateMetric de updateMetric")
+					print("Excepción: ",exc)
 					print("Error en used_users.label", file=sys.stderr)
 					user.printUserToError()
 
@@ -587,7 +596,7 @@ if __name__ == '__main__':
 			try:
 				apps.updateMetric()
 			except Exception as exc:
-				print("EXCEPCION: ",exc),
+				print("EXCEPCION NO CONTROLADA: ",exc),
 				print(traceback.format_exc())
 			if VERBOSE or SUMMARY:
 				apps.printApps()
