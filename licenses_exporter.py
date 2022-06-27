@@ -365,8 +365,12 @@ class App(object):
 			#Existe luego leemos el numero total de licencias y las que estan en uso
 			total = re.findall(self.features['match']['total'], str(content), re.MULTILINE)
 			inUse = re.findall(self.features['match']['used'], str(content), re.MULTILINE)
-			feature.maxLicenses = float(total[0])
-			feature.inUse = float(inUse[0])
+			#Tenemos que comprobar que efectivamente hay alguien usándolo, si no, no podemos leer el total de licencias
+			try:
+				feature.maxLicenses = float(total[0])
+				feature.inUse = float(inUse[0])
+			except:
+				return
 			if self.used_as_free:
 				feature.inUse = feature.maxLicenses - feature.inUse
 				if DEBUG:
