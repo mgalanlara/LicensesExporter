@@ -439,6 +439,7 @@ class App(object):
 						user.device = r.group(3)
 						user.date = r.group(8)
 						feature.userList.append(user)
+						
 
 	def parseRlmutil(self):
 		self.featureList = []
