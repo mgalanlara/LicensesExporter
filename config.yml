@@ -34,7 +34,7 @@ licenses:
       monitor: True
   - name: MATHCAD
     type: lmutil
-    skip: False
+    skip: True
     license_server: 7788@ucolic01.ctx.uco.es
     features:
       include: MATHCAD,254,255,256,257
@@ -113,7 +113,7 @@ licenses:
       monitor: True
   - name: ACAD2019-CIV3D
     type: lmutil
-    skip: False
+    skip: True
     license_server: 27000@ucolic01.ctx.uco.es
     features:
       include: 87624C3DGO_2022_0F
