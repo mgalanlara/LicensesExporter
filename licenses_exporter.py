@@ -100,6 +100,9 @@ class Feature(object):
 	def translate(self):
 			r = re.search(self.parent.features['translate']['search'],self.name)
 			if r is not None:
+				#Depuramos 
+				if DEBUG:
+					print("DEBUG: Translating feature: ",self.name)
 				self.name = self.parent.features['translate']['translations'][r.group('feature_name')] + " " + r.group('feature_suffix')
 			else:
 				#Si no encontramos traslacion debemos marcarla para borrar

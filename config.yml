@@ -52,7 +52,10 @@ licenses:
           translations:
             AMECH_PP: Autocad Mechanical
             RECAP: Autodesk RECAP
-            RVT: Autodesk REVIT
+            RVT: Autodesk Revit
+            REVIT: Autodesk Revit
+            RVTMPB: Autodesk Revit MEP
+            REVITST: Autodesk Revit Structure
             CIV3D: Autocad Civil 3D
             C3DGO: Autodesk Grading Optimization
     users:
