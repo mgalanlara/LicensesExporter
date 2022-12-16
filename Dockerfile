@@ -7,6 +7,7 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
     #yum -y update &&\
     yum -y install python3-pip pythoni3-requests &&\
     #yum -y install locales &&\
+	yum -y install gcc python3-devel &&\
     # Clean cache
     yum -y clean all
 RUN localedef  -c -i es_ES -f UTF-8 es_ES.UTF-8
