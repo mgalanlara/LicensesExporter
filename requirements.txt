@@ -1,6 +1,6 @@
 prometheus_client
 ruamel.yaml
 pandas
-selenium
+selenium==4.8.2
 requests
 lxml
