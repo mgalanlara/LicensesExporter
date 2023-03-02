@@ -1,4 +1,4 @@
-onlythis:
+onlythis: 
 licenses:
   - name: MATLAB R2018b
     type: lmutil
@@ -287,7 +287,7 @@ licenses:
   - name: PRESTO
     type: rawsocket
     skip: False
-    license_server: 192.168.115.73
+    license_server: 172.26.13.11
     license_port: 5001
     timeout: 3
     recv_bytes: 10
@@ -302,7 +302,7 @@ licenses:
     connect_only: True
 config:
   port: 8000
-  sleep: 15
+  sleep: 60
   lsmon_cmd: ./lsmon
   lmutil_cmd: ./lmutil lmstat -a -c
   rlmutil_cmd: ./rlmutil rlmstat -a -c
