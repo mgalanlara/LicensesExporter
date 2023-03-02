@@ -29,7 +29,6 @@ DEBUG = False
 TRACE = False
 VERBOSE = False
 SUMMARY = True
-
 if DEBUG: VERBOSE = True
 
 driver = None
@@ -255,10 +254,9 @@ class App(object):
 			print("Exception: ",exc)
 			return
 		try:
-			table = driver.find_element_by_id(self.features['js']['id'])
+			table = driver.find_element("id",self.features['js']['id'])
 		except Exception as exc:
 			print("Excepción en driver.find de PwtJS")
-	
 			print("Exception: ",exc)
 			return
 		try:
@@ -289,7 +287,7 @@ class App(object):
 					current_feat,url = self.parseWebUsersUrl(i)
 					if url is not None:
 						driver.get(url)
-						table = driver.find_element_by_id(self.users['js']['id'])
+						table = driver.find_element("id",self.users['js']['id'])
 						table_html = table.get_attribute(self.users['js']['attr'])
 						users_tbl = pd.read_html(table_html)[0]
 						if self.users['js']['iloc'] is not None:
@@ -442,8 +440,6 @@ class App(object):
 						user.device = r.group(3)
 						user.date = r.group(8)
 						feature.userList.append(user)
-						
-
 	def parseRlmutil(self):
 		self.featureList = []
 		self.online = False
@@ -481,7 +477,7 @@ class App(object):
 	def parseRawSocket(self):
 		self.featureList = []
 		self.online = False
-
+		if TRACE: trace(self.name,"En parseRawSocket")
 		try:
 			host = socket.gethostbyname(self.license_server)
 		except Exception as exc:
@@ -491,7 +487,11 @@ class App(object):
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.settimeout(self.timeout)
 		try:
+			if DEBUG:
+				print("Conectando a ",host,":",self.license_port)
 			sock.connect((host, self.license_port))
+			if DEBUG:
+				print("Conectado a ",host,":",self.license_port)
 			if hasattr(self,'connect_only'):
 				pass
 			else:
@@ -536,6 +536,7 @@ class App(object):
 class Apps(object):
 	def __init__(self,cfgFile):
 		self.appList = []
+		self.name = "Apps"
 		with open(cfgFile, 'r') as yamlFile:
 			self.cfg = yaml.safe_load(yamlFile)
 		for appCfg in self.cfg['licenses']:
@@ -562,6 +563,7 @@ class Apps(object):
 		self.WEBDRIVER_TYPE = self.cfg['config']['webdriver']['type']
 		self.WEBDRIVER_URL = self.cfg['config']['webdriver']['private-url'] if  isDocker() else self.cfg['config']['webdriver']['public-url']
 
+		if TRACE: trace(self.name,"Despues de crear objetos prometheus")
 		if self.WEBDRIVER_TYPE == 'local':
 			self.driver = webdriver.Chrome()
 		elif self.WEBDRIVER_TYPE == 'remote':
@@ -571,6 +573,7 @@ class Apps(object):
 				options=driver_options
 			)
 			self.driver.set_page_load_timeout(10)
+		if TRACE: trace(self.name,"Saliendo de Apps")
 
 	def parse(self):
 		for app in self.appList:
@@ -597,6 +600,7 @@ class Apps(object):
 
 if __name__ == '__main__':
 	try:
+		if TRACE: trace("MAIN ","Antes de Apps")
 		apps = Apps(CONFIG_FILE)
 	except Exception as exc:
 		print("Excepción en configuración: ",exc)
@@ -604,6 +608,7 @@ if __name__ == '__main__':
 	start_http_server(apps.PORT)
 	while True:
 			try:
+				if TRACE: trace("MAIN ","Antes de apps.updateMetric")
 				apps.updateMetric()
 			except Exception as exc:
 				print("EXCEPCION NO CONTROLADA: ",exc),
