@@ -6,7 +6,7 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rockyofficial && \
     yum -y install bash-completion redhat-lsb-core strace glibc.i686 epel-release &&\
     #yum -y update &&\
     yum -y install python3-pip python3-requests &&\
-    yum -y install locales &&\
+    yum -y install glibc-langpack-es &&\
 	yum -y install gcc python3-devel &&\
     # Clean cache
     yum -y clean all
