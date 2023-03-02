@@ -21,8 +21,8 @@ COPY --chmod=777 LinuxBins/lsmon /
 COPY --chmod=777 LinuxBins/lmutil /
 COPY --chmod=777 LinuxBins/rlmutil /
 
-RUN pip3 install -r /requirements.txt
+RUN pip3.9 install -r /requirements.txt
 
 EXPOSE      8000
 USER        nobody
-ENTRYPOINT ["python3", "licenses_exporter.py"]
+ENTRYPOINT ["python3.9", "licenses_exporter.py"]
