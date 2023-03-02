@@ -10,7 +10,7 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rockyofficial && \
 	yum -y install gcc python3-devel &&\
     # Clean cache
     yum -y clean all
-RUN localedef  -c -i es_ES -f UTF-8 es_ES.UTF-8
+#RUN localedef  -c -i es_ES -f UTF-8 es_ES.UTF-8
 ENV LANG es_ES.UTF-8
 ENV LANGUAGE es_ES.UTF-8
 ENV LC_ALL es_ES.UTF-8
