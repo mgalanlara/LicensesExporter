@@ -1,0 +1,4 @@
+El ecosistema de licenses exporter sirve para monitorizar **servidores de licencias**, normalmente de licencias flotantes. No está pensado para ejecutarse en cada equipo de usuario que tenga un software licenciado bloqueado a dicho nodo. Tampoco tiene porqué ejecutarse en el propio servidor de licencias, pues los servidores de licencias pueden ser varios y por lo general la forma de acceder a la información de dichos servidores es siempre remota.
+
+Licenses exporter se concibe como un proyecto dinámico y en constante desarrollo, tanto desde el punto de vista de las entradas del fichero de configuración para cada una de las aplicaciones, como desde el punto de vista de la implementación de los parsers actuales y futuros. Por tanto no espere un código extremadamente limpio y sin mucha información de depuración.
+

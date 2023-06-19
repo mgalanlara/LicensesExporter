@@ -284,6 +284,7 @@ licenses:
     license_port: 5000
     timeout: 3
     recv_bytes: 10
+    connect_only: False
   - name: PRESTO
     type: rawsocket
     skip: False
